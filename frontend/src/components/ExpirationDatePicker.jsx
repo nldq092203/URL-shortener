@@ -10,15 +10,15 @@ const ExpirationDatePicker = ({ expirationDate, setExpirationDate }) => {
     switch (value) {
       case "1 Day":
         setShowDatePicker(false); // Hide DatePicker
-        setExpirationDate(new Date(today.setDate(today.getDate() + 1)));
+        setExpirationDate(new Date(today.setDate(today.getDate() + 1)).toISOString());
         break;
       case "1 Week":
         setShowDatePicker(false); // Hide DatePicker
-        setExpirationDate(new Date(today.setDate(today.getDate() + 7)));
+        setExpirationDate(new Date(today.setDate(today.getDate() + 7)).toISOString());
         break;
       case "1 Month":
         setShowDatePicker(false); // Hide DatePicker
-        setExpirationDate(new Date(today.setMonth(today.getMonth() + 1)));
+        setExpirationDate(new Date(today.setMonth(today.getMonth() + 1)).toISOString());
         break;
       case "Custom":
         setShowDatePicker(true); // Show DatePicker
@@ -27,6 +27,12 @@ const ExpirationDatePicker = ({ expirationDate, setExpirationDate }) => {
       default:
         setShowDatePicker(false); // Hide DatePicker by default
         setExpirationDate(null);
+    }
+  };
+
+  const handleDatePickerChange = (date) => {
+    if (date) {
+      setExpirationDate(date.toISOString());
     }
   };
 
@@ -48,8 +54,8 @@ const ExpirationDatePicker = ({ expirationDate, setExpirationDate }) => {
         <DatePicker
           label="Expiration Date (Optional)"
           placeholder="Pick date"
-          value={expirationDate}
-          onChange={setExpirationDate}
+          value={expirationDate ? new Date(expirationDate) : null} // Parse ISO string back to Date
+          onChange={handleDatePickerChange}
         />
       )}
     </div>

@@ -6,39 +6,44 @@ from datetime import datetime, timedelta
 from django.utils.timezone import now
 from .models import UrlMapping  
 from django.shortcuts import redirect
+from dateutil.parser import parse as parse_date  # Import dateutil for flexible date parsing
 
 class UrlGeneration(APIView):
     def post(self, request):
         """
-        POST method to handle URL shortening.
+        POST method to handle URL shortening with improved date handling.
         """
-        # Validate Input
         long_url = request.data.get("long_url")
         short_url_id = request.data.get("short_url_id")  # Optional custom alias
         expiration_date = request.data.get("expiration_date")  # Optional expiration date
 
+        # Validate the 'long_url'
         if not long_url:
             return Response({"error": "The 'long_url' field is required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Validate expiration_date
+        # Validate and parse 'expiration_date'
         if expiration_date:
             try:
-                expiration_date = datetime.fromisoformat(expiration_date)
+                # Try parsing with dateutil for multiple format support
+                expiration_date = parse_date(expiration_date)
                 if expiration_date <= now():
                     return Response(
                         {"error": "The 'expiration_date' must be in the future."},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-            except ValueError:
+            except (ValueError, OverflowError):
                 return Response(
-                    {"error": "Invalid 'expiration_date' format. Use ISO 8601 format (e.g., 'YYYY-MM-DDTHH:MM:SS')."},
+                    {"error": (
+                        "Invalid 'expiration_date' format. Supported formats include: "
+                        "'YYYY-MM-DD', 'YYYY-MM-DDTHH:MM:SS', or other common date formats."
+                    )},
                     status=status.HTTP_400_BAD_REQUEST
                 )
         else:
-            # Set a default expiration date (e.g., 90 days from now)
+            # Default expiration: 90 days from now
             expiration_date = now() + timedelta(days=90)
 
-        # Custom Alias Logic
+        # Handle short URL generation (same logic as your original code)
         if short_url_id:
             # Check if custom alias already exists
             if UrlMapping.objects.filter(short_url_id=short_url_id).exists():
@@ -47,28 +52,25 @@ class UrlGeneration(APIView):
                     status=status.HTTP_409_CONFLICT
                 )
         else:
-            # Auto-Generate Short URL
-            # Hash the long URL
-            hash_object = hashlib.md5(long_url.encode())  # MD5 hashing
-            truncated_hash = hash_object.hexdigest()[:12]  # First 6 bytes (48 bits)
-            
-            # Convert hash to decimal and encode to Base62
-            decimal_value = int(truncated_hash, 16)  # Convert hex to decimal
-            short_url_id = self.base62_encode(decimal_value)[:7]  # Base62 and limit to 7 chars
+            # Generate a short URL ID
+            hash_object = hashlib.md5(long_url.encode())
+            truncated_hash = hash_object.hexdigest()[:12]
+            decimal_value = int(truncated_hash, 16)
+            short_url_id = self.base62_encode(decimal_value)[:7]
 
-            # Check if the auto-generated short URL already exists
+            # Check for collisions
             suffix = 0
             original_short_url_id = short_url_id
             while UrlMapping.objects.filter(short_url_id=short_url_id).exists():
                 suffix += 1
                 short_url_id = f"{original_short_url_id}-{suffix}"
-                if suffix > 10:  # To avoid infinite loops in extreme cases
+                if suffix > 10:
                     return Response(
                         {"error": "Unable to generate a unique short URL due to repeated collisions."},
                         status=status.HTTP_409_CONFLICT
                     )
 
-        # Save to Database
+        # Save to database
         url_mapping = UrlMapping.objects.create(
             short_url_id=short_url_id,
             long_url=long_url,
@@ -77,7 +79,8 @@ class UrlGeneration(APIView):
 
         return Response({
             "short_url_id": short_url_id,
-            "long_url": long_url
+            "long_url": long_url,
+            "expiration_date": expiration_date.isoformat()
         }, status=status.HTTP_201_CREATED)
 
     @staticmethod
