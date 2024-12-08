@@ -15,7 +15,7 @@ const RedirectPage = () => {
 
       try {
         // Manually disable rejecting HTTP status codes
-        const response = await axios.get(`http://localhost:8000/api/v1/urls/${shortUrlId}/`, {
+        const response = await axios.get(`https://url-shortener-production-5b97.up.railway.app/api/v1/urls/${shortUrlId}/`, {
           validateStatus: (status) => status >= 200 && status < 400, // Accept 2xx and 3xx responses
         });
 
