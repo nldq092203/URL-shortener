@@ -109,10 +109,10 @@ class UrlRedirection(APIView):
                     {"error": "The short URL has expired."},
                     status=status.HTTP_410_GONE  
                 )
-
-            # Redirection
-            return redirect(url_mapping.long_url)
-
+            return Response(
+                {"long_url": url_mapping.long_url},
+                status=status.HTTP_302_FOUND  
+            )
         except UrlMapping.DoesNotExist:
             return Response(
                 {"error": "The short URL does not exist."},

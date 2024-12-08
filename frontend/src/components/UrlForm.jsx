@@ -2,16 +2,16 @@ import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { shortenUrl } from "../api/urlApi";
 import { TextInput, Button, Notification } from "@mantine/core";
-import { DatePicker } from "@mantine/dates";
+import ExpirationDatePicker from "./ExpirationDatePicker"; // Import your custom component
 
 const UrlForm = ({ setResult }) => {
   const [longUrl, setLongUrl] = useState("");
   const [alias, setAlias] = useState("");
-  const [expirationDate, setExpirationDate] = useState("");
+  const [expirationDate, setExpirationDate] = useState(null); // Set as null initially
   const [error, setError] = useState("");
 
   const mutation = useMutation({
-    mutationFn: shortenUrl, // Correct way to specify the mutation function
+    mutationFn: shortenUrl, // Mutation function to shorten the URL
     onSuccess: (data) => {
       setResult(data);
       setLongUrl("");
@@ -48,13 +48,13 @@ const UrlForm = ({ setResult }) => {
         value={alias}
         onChange={(e) => setAlias(e.target.value)}
       />
-      <DatePicker
-        label="Expiration Date (Optional)"
-        placeholder="Pick date"
-        value={expirationDate}
-        onChange={setExpirationDate}
 
+      {/* Use ExpirationDatePicker as a component */}
+      <ExpirationDatePicker
+        expirationDate={expirationDate}
+        setExpirationDate={setExpirationDate} 
       />
+
       <Button type="submit" loading={mutation.isLoading}>
         {mutation.isLoading ? "Creating..." : "Shorten URL"}
       </Button>

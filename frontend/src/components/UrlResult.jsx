@@ -4,7 +4,7 @@ import { Button, CopyButton } from "@mantine/core";
 const UrlResult = ({ result }) => {
   if (!result) return null;
 
-  const shortUrl = `http://localhost:8000/urls/${result.short_url_id}`;
+  const shortUrl = `http://localhost:5173/${result.short_url_id}`;
 
   return (
     <div className="space-y-4">
