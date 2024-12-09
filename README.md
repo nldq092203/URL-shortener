@@ -42,6 +42,8 @@ A simple URL Shortener application that enables users to create shortened URLs, 
 	•	410 Gone (Expired)
 	•	404 Not Found (Invalid)
 ```
+## Website
+https://url-shortener-production-5e17.up.railway.app/
 
 ## Contact
 
